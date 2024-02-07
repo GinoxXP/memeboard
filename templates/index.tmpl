@@ -1,10 +1,15 @@
 <html>
+    <head>
+        <link rel="stylesheet" href="/css/index.css">
+    </head>
     <title>
         {{ .title }}
     </title>
     <body>
-        {{range .images}}
-            <img src="{{.}}">
-        {{end}}
+        <div class="gallery">
+            {{range .images}}
+                <img class="image" src="{{.}}">
+            {{end}}
+        </div>
     </body>
 </html>

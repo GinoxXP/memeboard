@@ -12,6 +12,7 @@ func main() {
 	r := gin.Default()
 	r.LoadHTMLGlob("templates/*")
 	r.Static("/storage", "./storage")
+	r.Static("/css", "./css")
 
 	f, err := os.Open("./storage")
 	if err != nil {
