@@ -1,12 +1,40 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
+)
 
 func main() {
 	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
+	r.LoadHTMLGlob("templates/*")
+	r.Static("/storage", "./storage")
+
+	f, err := os.Open("./storage")
+	if err != nil {
+		log.Print(err)
+		return
+	}
+
+	files, err := f.Readdir(0)
+	if err != nil {
+		log.Print(err)
+		return
+	}
+
+	images := make([]string, len(files))
+
+	for i := 0; i < len(files); i++ {
+		images[i] = "./storage/" + files[i].Name()
+	}
+
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.tmpl", gin.H{
+			"title":  "Memeboard",
+			"images": images,
 		})
 	})
 	r.Run()
