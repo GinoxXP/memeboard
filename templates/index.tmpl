@@ -6,6 +6,10 @@
         {{ .title }}
     </title>
     <body>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" id="file" name="filename">
+            <input type="submit">
+        </form>
         <div class="gallery">
             {{range .images}}
                 <img class="image" src="{{.}}">

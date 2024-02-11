@@ -38,5 +38,24 @@ func main() {
 			"images": images,
 		})
 	})
+
+	r.POST("/upload", func(c *gin.Context) {
+		file, err := c.FormFile("filename")
+		if err != nil {
+			c.String(http.StatusBadRequest, "get form err: %s", err.Error())
+			log.Print(err.Error())
+			return
+		}
+
+		err = c.SaveUploadedFile(file, "./storage/"+file.Filename)
+		if err != nil {
+			c.String(http.StatusBadRequest, "upload file err: %s", err.Error())
+			log.Print(err.Error())
+			return
+		}
+
+		c.Redirect(http.StatusMovedPermanently, "/")
+		c.Abort()
+	})
 	r.Run()
 }
