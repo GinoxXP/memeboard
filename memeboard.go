@@ -1,14 +1,30 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
+type DbSettings struct {
+	Username string `json:username`
+	Password string `json:password`
+	Address  string `json:address`
+	Port     int    `json:port`
+	DbName   string `json:dbname`
+}
+
 func main() {
+
+	configureDB()
+
 	r := gin.Default()
 	r.LoadHTMLGlob("templates/*")
 	r.Static("/storage", "./storage")
@@ -16,14 +32,12 @@ func main() {
 
 	f, err := os.Open("./storage")
 	if err != nil {
-		log.Print(err)
-		return
+		panic(err)
 	}
 
 	files, err := f.Readdir(0)
 	if err != nil {
-		log.Print(err)
-		return
+		panic(err)
 	}
 
 	images := make([]string, len(files))
@@ -58,4 +72,35 @@ func main() {
 		c.Abort()
 	})
 	r.Run()
+}
+
+func configureDB() {
+	jsonFile, err := os.Open("./dbSettings.json")
+	if err != nil {
+		panic(err)
+	}
+	defer jsonFile.Close()
+
+	byteValue, _ := io.ReadAll(jsonFile)
+
+	var settings DbSettings
+
+	err = json.Unmarshal(byteValue, &settings)
+	if err != nil {
+		panic(err)
+	}
+
+	bdUrl := fmt.Sprintf(
+		"postgres://%s:%s@%s:%d/%s",
+		settings.Username,
+		settings.Password,
+		settings.Address,
+		settings.Port,
+		settings.DbName)
+
+	conn, err := pgx.Connect(context.Background(), bdUrl)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close(context.Background())
 }
