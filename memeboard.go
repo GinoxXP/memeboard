@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
-	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -25,53 +23,17 @@ func main() {
 
 	configureDB()
 
-	r := gin.Default()
-	r.LoadHTMLGlob("templates/*")
-	r.Static("/storage", "./storage")
-	r.Static("/css", "./css")
+	router := gin.Default()
+	router.LoadHTMLGlob("templates/*")
+	router.Static("/storage", "./storage")
+	router.Static("/css", "./css")
 
-	f, err := os.Open("./storage")
-	if err != nil {
-		panic(err)
-	}
+	server := Server{}
 
-	files, err := f.Readdir(0)
-	if err != nil {
-		panic(err)
-	}
+	router.GET("/", server.getAllImages)
+	router.POST("/upload", server.uploadImage)
 
-	images := make([]string, len(files))
-
-	for i := 0; i < len(files); i++ {
-		images[i] = "./storage/" + files[i].Name()
-	}
-
-	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.tmpl", gin.H{
-			"title":  "Memeboard",
-			"images": images,
-		})
-	})
-
-	r.POST("/upload", func(c *gin.Context) {
-		file, err := c.FormFile("filename")
-		if err != nil {
-			c.String(http.StatusBadRequest, "get form err: %s", err.Error())
-			log.Print(err.Error())
-			return
-		}
-
-		err = c.SaveUploadedFile(file, "./storage/"+file.Filename)
-		if err != nil {
-			c.String(http.StatusBadRequest, "upload file err: %s", err.Error())
-			log.Print(err.Error())
-			return
-		}
-
-		c.Redirect(http.StatusMovedPermanently, "/")
-		c.Abort()
-	})
-	r.Run()
+	router.Run()
 }
 
 func configureDB() {
