@@ -3,29 +3,36 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
+	"path"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type Server struct {
+	storage Storage
+}
+
+func NewServer() *Server {
+	return &Server{
+		storage: *NewStorage(),
+	}
+}
+
+func (server Server) ErrorPage(c *gin.Context, err error) {
+	log.Print(err.Error())
+	c.HTML(http.StatusInternalServerError, "error.tmpl", gin.H{
+		"title": "Some shit happened",
+		"error": err.Error(),
+	})
+	c.Abort()
 }
 
 func (server Server) getAllImages(c *gin.Context) {
-	f, err := os.Open("./storage")
+	images, err := server.storage.GetAllImages()
 	if err != nil {
-		panic(err)
-	}
-
-	files, err := f.Readdir(0)
-	if err != nil {
-		panic(err)
-	}
-
-	images := make([]string, len(files))
-
-	for i := 0; i < len(files); i++ {
-		images[i] = "./storage/" + files[i].Name()
+		server.ErrorPage(c, err)
+		return
 	}
 
 	c.HTML(http.StatusOK, "index.tmpl", gin.H{
@@ -37,17 +44,21 @@ func (server Server) getAllImages(c *gin.Context) {
 func (server Server) uploadImage(c *gin.Context) {
 	file, err := c.FormFile("filename")
 	if err != nil {
-		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
-		log.Print(err.Error())
+		server.ErrorPage(c, err)
 		return
 	}
 
-	err = c.SaveUploadedFile(file, "./storage/"+file.Filename)
+	imageName := uuid.New().String() + ".png"
+
+	imagePath := path.Join(GetImagesPath(), imageName)
+
+	err = c.SaveUploadedFile(file, imagePath)
 	if err != nil {
-		c.String(http.StatusBadRequest, "upload file err: %s", err.Error())
-		log.Print(err.Error())
+		server.ErrorPage(c, err)
 		return
 	}
+
+	server.storage.UploadImage(imagePath)
 
 	c.Redirect(http.StatusMovedPermanently, "/")
 	c.Abort()
