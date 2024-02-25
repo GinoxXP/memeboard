@@ -20,8 +20,8 @@ func main() {
 
 	server := NewServer()
 
-	router.GET("/", server.getAllImages)
-	router.POST("/upload", server.uploadImage)
+	router.GET("/", server.GetGalery)
+	router.POST("/upload", server.UploadImage)
 
 	router.Run()
 }

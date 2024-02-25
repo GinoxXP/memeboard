@@ -19,7 +19,7 @@ func NewServer() *Server {
 	}
 }
 
-func (server Server) ErrorPage(c *gin.Context, err error) {
+func (server *Server) ErrorPage(c *gin.Context, err error) {
 	log.Print(err.Error())
 	c.HTML(http.StatusInternalServerError, "error.tmpl", gin.H{
 		"title": "Some shit happened",
@@ -28,8 +28,8 @@ func (server Server) ErrorPage(c *gin.Context, err error) {
 	c.Abort()
 }
 
-func (server Server) getAllImages(c *gin.Context) {
-	images, err := server.storage.GetAllImages()
+func (server *Server) GetGalery(c *gin.Context) {
+	thumbnails, err := server.storage.GetAllThumbnails()
 	if err != nil {
 		server.ErrorPage(c, err)
 		return
@@ -37,11 +37,11 @@ func (server Server) getAllImages(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "index.tmpl", gin.H{
 		"title":  "Memeboard",
-		"images": images,
+		"images": thumbnails,
 	})
 }
 
-func (server Server) uploadImage(c *gin.Context) {
+func (server *Server) UploadImage(c *gin.Context) {
 	file, err := c.FormFile("filename")
 	if err != nil {
 		server.ErrorPage(c, err)
@@ -58,7 +58,11 @@ func (server Server) uploadImage(c *gin.Context) {
 		return
 	}
 
-	server.storage.UploadImage(imagePath)
+	err = server.storage.UploadImage(imagePath)
+	if err != nil {
+		server.ErrorPage(c, err)
+		return
+	}
 
 	c.Redirect(http.StatusMovedPermanently, "/")
 	c.Abort()
