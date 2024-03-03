@@ -22,10 +22,10 @@ func GetThumbnailsPath() string {
 func GetThumbnail(imageId int) (*models.Thumbnail, error) {
 	rows, err := connection.Query(
 		context.Background(),
-		"SELECT * FROM thumbnail"+
-			"WHERE thumbnail.id = ("+
-			"SELECT thumbnail_id FROM image_thumbnail"+
-			"WHERE image_thumbnail.image_id = $1)", imageId)
+		"SELECT * FROM thumbnail "+
+			"WHERE id = ( "+
+			"SELECT thumbnail_id FROM image_thumbnail "+
+			"WHERE image_id = $1)", imageId)
 	if err != nil {
 		return nil, err
 	}
