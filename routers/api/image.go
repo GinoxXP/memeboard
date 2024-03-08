@@ -14,14 +14,8 @@ func GetImages(c *gin.Context) {
 		return
 	}
 
-	compositeImgages, err := service.GetCompositeImages(images)
-	if err != nil {
-		ErrorPage(c, err)
-		return
-	}
-
 	c.HTML(http.StatusOK, "index.tmpl", gin.H{
 		"title":  "Memeboard",
-		"images": compositeImgages,
+		"images": images,
 	})
 }

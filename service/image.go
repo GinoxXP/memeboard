@@ -2,17 +2,29 @@ package service
 
 import (
 	"context"
+	"image"
+	"image/png"
 	"memeboard/models"
+	"os"
 	"path"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/nfnt/resize"
 )
 
 const IMAGES_DIR string = "images"
 
+const THUMBNAILS_DIR string = "thumbnails"
+
 func GetImagesPath() string {
 	return path.Join(path.Base(""), STORAGE_DIR, IMAGES_DIR)
 }
+
+func GetThumbnailsPath() string {
+	return path.Join(path.Base(""), STORAGE_DIR, THUMBNAILS_DIR)
+}
+
 func GetAllImages() (*[]models.Image, error) {
 	rows, err := connection.Query(
 		context.Background(),
@@ -27,18 +39,44 @@ func GetAllImages() (*[]models.Image, error) {
 }
 
 func UploadImage(imagePath string) error {
-	idRows, err := connection.Query(
+	thumbnailPath, err := CreateThumbnail(imagePath)
+	_, err = connection.Query(
 		context.Background(),
-		"INSERT INTO image (path) VALUES ($1) RETURNING id;", imagePath)
+		"INSERT INTO image (source_path, thumbnail_path) VALUES ($1, $2)", imagePath, thumbnailPath)
 	if err != nil {
 		return err
 	}
 
-	id, err := pgx.CollectOneRow(idRows, pgx.RowTo[int])
-	if err != nil {
-		return err
-	}
-
-	err = CreateThumbnail(id)
 	return err
+}
+
+func CreateThumbnail(imagePath string) (string, error) {
+	file, err := os.Open(imagePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	sourceImage, _, err := image.Decode(file)
+	if err != nil {
+		return "", err
+	}
+
+	thumbnail := resize.Thumbnail(250, 250, sourceImage, resize.Bilinear)
+
+	thumbnailName := uuid.New().String() + ".png"
+	thumbnailPath := path.Join(GetThumbnailsPath(), thumbnailName)
+
+	thumbnailFile, err := os.Create(thumbnailPath)
+	if err != nil {
+		return "", err
+	}
+	defer thumbnailFile.Close()
+
+	err = png.Encode(thumbnailFile, thumbnail)
+	if err != nil {
+		return "", err
+	}
+
+	return thumbnailPath, err
 }
