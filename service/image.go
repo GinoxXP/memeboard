@@ -38,6 +38,19 @@ func GetAllImages() (*[]models.Image, error) {
 	return &images, err
 }
 
+func GetImage(id int) (*models.Image, error) {
+	rows, err := connection.Query(
+		context.Background(),
+		"SELECT * FROM image WHERE id = $1", id)
+	if err != nil {
+		return nil, err
+	}
+
+	image, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[models.Image])
+
+	return &image, err
+}
+
 func UploadImage(imagePath string) error {
 	thumbnailPath, err := CreateThumbnail(imagePath)
 	_, err = connection.Query(

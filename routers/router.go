@@ -16,6 +16,7 @@ func InitRouter() {
 	router.Static("/css", "./css")
 
 	router.GET("/", api.GetImages)
+	router.GET("/image", api.GetImage)
 	router.POST("/upload", api.UploadImage)
 
 	router.Run()

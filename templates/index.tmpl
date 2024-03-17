@@ -12,7 +12,9 @@
         </form>
         <div class="gallery">
             {{range .images}}
-                <img class="image" src="{{.ThumbnailPath}}">
+                <a href="/image?id={{.ID}}">
+                    <img class="image" src="{{.ThumbnailPath}}">
+                </a>
             {{end}}
         </div>
     </body>
