@@ -53,12 +53,13 @@ func GetImage(id int) (*models.Image, error) {
 
 func UploadImage(imagePath string) error {
 	thumbnailPath, err := CreateThumbnail(imagePath)
-	_, err = connection.Query(
-		context.Background(),
-		"INSERT INTO image (source_path, thumbnail_path) VALUES ($1, $2)", imagePath, thumbnailPath)
 	if err != nil {
 		return err
 	}
+
+	_, err = connection.Query(
+		context.Background(),
+		"INSERT INTO image (source_path, thumbnail_path) VALUES ($1, $2)", imagePath, thumbnailPath)
 
 	return err
 }

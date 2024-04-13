@@ -18,6 +18,7 @@ func InitRouter() {
 	router.GET("/", api.GetImages)
 	router.GET("/image", api.GetImage)
 	router.POST("/upload", api.UploadImage)
+	router.POST("/addTag", api.AddTag)
 
 	router.Run()
 }

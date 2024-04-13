@@ -36,8 +36,15 @@ func GetImage(c *gin.Context) {
 		return
 	}
 
+	tags, err := service.GetAttachedTags(image.ID)
+	if err != nil {
+		ErrorPage(c, err)
+		return
+	}
+
 	c.HTML(http.StatusOK, "image.tmpl", gin.H{
 		"title": "Image",
 		"image": image,
+		"tags":  tags,
 	})
 }
