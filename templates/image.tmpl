@@ -6,14 +6,21 @@
         {{ .title }}
     </title>
     <body>
-        <div class="tags" >
-            <form action="/addTag" method="post">
-                <input type="text" name="tag">
-                <input type="hidden" name="imageID" value="{{.image.ID}}">
-                <button type="submit">Add tag</button>
-            </form>
+        <form action="/addTag" method="post">
+            <input type="text" name="tag">
+            <input type="hidden" name="imageID" value="{{.image.ID}}">
+            <button type="submit">Add tag</button>
+        </form>
+        <div>
             {{range .tags}}
-                {{.TagName}}
+                <div class="tag">
+                    {{.TagName}}
+                    <form action="removeTag" method="post">
+                        <input type="hidden" name="imageID" value="{{$.image.ID}}">
+                        <input type="hidden" name="tagID" value="{{.ID}}">
+                        <button type="submit">X</button>
+                    </form>
+                </div>
             {{end}}
         </div>
         <img src="{{.image.SourcePath}}">

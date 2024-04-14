@@ -91,6 +91,14 @@ func AddTagToImage(tagname string, imageID int) error {
 	return err
 }
 
+func RemoveTagFromImage(tagId int, imageId int) error {
+	_, err := connection.Query(
+		context.Background(),
+		"DELETE FROM image_tag WHERE tag_id = $1 AND image_id = $2", tagId, imageId)
+
+	return err
+}
+
 func TagImageLinkExists(imageId int, tagId int) (bool, error) {
 	rows, err := connection.Query(
 		context.Background(),
