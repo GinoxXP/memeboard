@@ -20,6 +20,7 @@ func InitRouter() {
 	router.POST("/upload", api.UploadImage)
 	router.POST("/addTag", api.AddTag)
 	router.POST("/removeTag", api.RemoveTag)
+	router.POST("/search", api.GetImagesForTags)
 
 	router.Run()
 }

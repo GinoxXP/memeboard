@@ -6,6 +6,10 @@
         {{ .title }}
     </title>
     <body>
+        <form action="/search" method="post">
+            <input type="text" id="search" name="search">
+            <input type="submit">
+        </form>
         <form action="/upload" method="post" enctype="multipart/form-data">
             <input type="file" id="file" name="filename">
             <input type="submit">

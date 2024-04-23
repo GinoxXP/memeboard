@@ -46,6 +46,50 @@ func GetAttachedTags(imageID int) ([]*models.Tag, error) {
 	return tags, err
 }
 
+func GetImagesByTags(tagNames []string) ([]models.Image, error) {
+	tags := make([]*models.Tag, len(tagNames))
+	for i, tagName := range tagNames {
+		tag, err := GetTagByName(tagName)
+		if err != nil {
+			return nil, err
+		}
+		tags[i] = tag
+	}
+
+	query := fmt.Sprintf("SELECT DISTINCT image_id FROM image_tag WHERE tag_id = %d", tags[0].ID)
+	for i, tag := range tags {
+		if i == 0 {
+			continue
+		}
+
+		query = fmt.Sprintf(query+"\nINTERSECT\nSELECT DISTINCT image_id FROM image_tag WHERE tag_id = %d", tag.ID)
+	}
+
+	query = fmt.Sprintf("SELECT * FROM image WHERE id IN ( %s )", query)
+
+	rows, err := connection.Query(
+		context.Background(),
+		query)
+	if err != nil {
+		return nil, err
+	}
+
+	images, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Image])
+	return images, err
+}
+
+func GetImageIdsByTagId(tagID int) ([]int, error) {
+	rows, err := connection.Query(
+		context.Background(),
+		"SELECT image_id FROM image_tag WHERE tag_id = $1", tagID)
+	if err != nil {
+		return nil, err
+	}
+
+	imageIds, err := pgx.CollectRows(rows, pgx.RowTo[int])
+	return imageIds, err
+}
+
 func AddTag(tagname string) (*models.Tag, error) {
 	rows, err := connection.Query(
 		context.Background(),
@@ -136,7 +180,7 @@ func TagExists(tag string) (bool, error) {
 func GetTagByName(tagname string) (*models.Tag, error) {
 	rows, err := connection.Query(
 		context.Background(),
-		"SELECT * FROM tag WHERE tagname = '($1)'", tagname)
+		"SELECT * FROM tag WHERE tagname = $1", tagname)
 
 	if err != nil {
 		return nil, err
